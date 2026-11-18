@@ -1,0 +1,96 @@
+[project]
+name = "blog-backend"
+version = "0.1.0"
+description = "Full-stack blogging + real-time chat backend"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  # Web
+  "fastapi>=0.115,<1.0",
+  "uvicorn[standard]>=0.32,<1.0",
+  "gunicorn>=23,<24",
+  "python-multipart>=0.0.9",
+
+  # Config / models
+  "pydantic[email]>=2.9,<3.0",
+  "pydantic-settings>=2.5,<3.0",
+
+  # DB
+  "sqlalchemy[asyncio]>=2.0.35,<2.1",
+  "asyncpg>=0.30,<1.0",
+  "alembic>=1.14,<2.0",
+
+  # Auth (spec: pyjwt + argon2-cffi directly, NOT passlib)
+  "pyjwt>=2.9,<3.0",
+  "argon2-cffi>=23.1,<24.0",
+
+  # Cache / queue
+  "redis>=5.2,<6.0",
+  "celery>=5.4,<6.0",
+
+  # Storage
+  "boto3>=1.35,<2.0",
+
+  # Observability
+  "prometheus-fastapi-instrumentator>=8.0.1,<9.0",
+
+  # HTTP client (for Ollama calls later, and MinIO ping)
+  "httpx>=0.27,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.7,<1.0",
+  "mypy>=1.13,<2.0",
+  "pre-commit>=4.0,<5.0",
+  "types-boto3>=1.35",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+# ---------- Ruff ----------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["app"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S", "C4", "SIM", "RUF"]
+ignore = [
+  "S101",   # allow assert in non-test code (our scripts)
+  "B008",   # FastAPI Depends() in defaults is idiomatic
+]
+
+[tool.ruff.lint.per-file-ignores]
+"app/scripts/*" = ["S"]
+"app/main.py" = ["E402"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ---------- mypy ----------
+[tool.mypy]
+python_version = "3.12"
+strict = false
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+plugins = ["pydantic.mypy"]
+exclude = ["alembic/versions"]
+
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*"]
+ignore_missing_imports = true
+
+
+[tool.pyright]
+reportUnknownMemberType = "none"
+reportUnknownVariableType = "none"
+reportUnknownArgumentType = "none"
+reportMissingTypeStubs = "none"
