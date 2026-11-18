@@ -59,3 +59,23 @@ def require_roles(*roles: UserRole) -> Callable[..., Awaitable[User]]:
         return user
 
     return _guard
+
+
+async def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    session: AsyncSession = Depends(get_session),
+) -> User | None:
+    if credentials is None or not credentials.credentials:
+        return None
+    try:
+        payload = decode_access(credentials.credentials)
+    except TokenError:
+        return None
+    try:
+        user_id = uuid.UUID(payload["sub"])
+    except (KeyError, ValueError):
+        return None
+    user = await session.get(User, user_id)
+    if user is None or not user.is_active:
+        return None
+    return user

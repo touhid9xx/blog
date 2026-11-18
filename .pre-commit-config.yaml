@@ -13,6 +13,7 @@ repos:
     hooks:
       - id: mypy
         files: ^backend/app/
-        # Path is relative to the root folder
+        # Use your local venv so mypy sees .env and installed dependencies
         args: ["--python-executable=venv/Scripts/python.exe"]
+        # Exclude alembic and scripts from strict checking
         exclude: ^backend/(alembic|app/scripts)/
